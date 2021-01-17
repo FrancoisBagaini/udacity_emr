@@ -66,8 +66,10 @@ def create_tf_categorical_feature_cols(categorical_col_list,
         vocab_file_path = os.path.join(vocab_dir,  c + "_vocab.txt")
         size = pd.read_csv(vocab_file_path, header=None).shape[0]
         tf_categorical_column = tf.feature_column.categorical_column_with_vocabulary_file(key=c, vocabulary_file=vocab_file_path, vocabulary_size= size)
-        #tf_categorical_feature_column = tf.feature_column.indicator_column(tf_categorical_column)
-        tf_categorical_feature_column = tf.feature_column.embedding_column(tf_categorical_column, max(2,size//10))
+        if size <= 8:
+            tf_categorical_feature_column = tf.feature_column.indicator_column(tf_categorical_column)
+        else:
+            tf_categorical_feature_column = tf.feature_column.embedding_column(tf_categorical_column, max(8,size//8))
         output_tf_list.append(tf_categorical_feature_column)
     return output_tf_list
 
@@ -97,8 +99,8 @@ def get_mean_std_from_preds(diabetes_yhat):
     '''
     diabetes_yhat: TF Probability prediction object
     '''
-    m = '?'
-    s = '?'
+    m = diabetes_yhat.loc
+    s = diabetes_yhat.scale
     return m, s
 
 # Question 10
@@ -109,6 +111,7 @@ def get_student_binary_prediction(df, col):
     return:
         student_binary_prediction: pandas dataframe converting input to flattened numpy array and binary labels
     '''
+    student_binary_prediction = df[col].apply(lambda x: 1 if x >= 5 else 0)
     return student_binary_prediction
 
 
